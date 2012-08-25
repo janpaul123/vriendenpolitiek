@@ -1,13 +1,13 @@
 all: assets
 
 # assets
-assets: assets/js/browser.js assets/css/style.css
+assets: assets/js/browser.js assets/index.css
 
 assets/js/browser.js: browser.js
 	cp browser.js assets/js/browser.js
 
-assets/css/style.css: style.css
-	cp style.css assets/css/style.css
+assets/index.css: style.css
+	cp style.css assets/index.css
 
 browser.js: *.js */*.js data.js
 	node_modules/.bin/browserify cli-assets.js -d -o browser.js
