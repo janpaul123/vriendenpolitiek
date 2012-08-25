@@ -3,31 +3,26 @@ assert = require('assert');
 
 var partijen = ['vvd', 'pvda', 'cda', 'pvv', 'groenlinks', 'd66', 'christenunie', 'verdonk', 'sp', 'sgp', 'brinkman', 'pvdd'];
 
-fs.readFile('Stemmingen.tsv', 'utf8', function (err, data) {
+fs.readFile('Stemmingen.tsv', 'utf8', function (err, input) {
 	if (err) {
 		return console.log(err);
 	}
 
-	var lines = data.split('\n');
-	var besluiten = [];
-	var totaal = [];
-	var voors = [];
-	var tegens = [];
+	var lines = input.split('\n');
+
+	var data = {voors: {}, tegens: {}, totaalPerPartij: {}};
+	var besluiten = {};
 
 	for (var jaar=2008; jaar<=2012; jaar++) {
-		totaal[jaar] = {};
-		voors[jaar] = {};
-		tegens[jaar] = {};
+		data.totaalPerPartij[jaar] = {};
+		data.voors[jaar] = {};
+		data.tegens[jaar] = {};
 		for (var i=0; i<partijen.length; i++) {
-			totaal[jaar][partijen[i]] = voors[jaar][partijen[i]] = tegens[jaar][partijen[i]] = 0;
+			data.totaalPerPartij[jaar][partijen[i]] = data.voors[jaar][partijen[i]] = data.tegens[jaar][partijen[i]] = 0;
 		}
 	}
 
 	for (var y=1; y<lines.length; y++) {
-		if (y % 10000 === 0) {
-			console.log('regel ' + y);
-		}
-
 		var tabs = lines[y].split('\t');
 		var besluit = (tabs[11] || '').toLowerCase();
 
@@ -50,67 +45,32 @@ fs.readFile('Stemmingen.tsv', 'utf8', function (err, data) {
 
 				if (soort === 'tegen') {
 					besluiten[jaar][besluit][partij] = 0;
-					tegens[jaar][partij]++;
-					totaal[jaar][partij]++;
+					data.tegens[jaar][partij]++;
+					data.totaalPerPartij[jaar][partij]++;
 				} else if (soort === 'voor') {
 					besluiten[jaar][besluit][partij] = 1;
-					voors[jaar][partij]++;
-					totaal[jaar][partij]++;
+					data.voors[jaar][partij]++;
+					data.totaalPerPartij[jaar][partij]++;
 				}
 			}
 		}
 	}
 
-
-	console.log('totaal:');
-	for(var i=0; i<partijen.length; i++) {
-		var output = partijen[i];
-		for(jaar=2008; jaar<=2012; jaar++) {
-			output += '\t' + totaal[jaar][partijen[i]];
-		}
-		console.log(output);
-	}
-	console.log();
-
-	console.log('voors:');
-	for(var i=0; i<partijen.length; i++) {
-		var output = partijen[i];
-		for(jaar=2008; jaar<=2012; jaar++) {
-			output += '\t' + voors[jaar][partijen[i]];
-		}
-		console.log(output);
-	}
-	console.log();
-
-	console.log('tegens:');
-	for(var i=0; i<partijen.length; i++) {
-		var output = partijen[i];
-		for(jaar=2008; jaar<=2012; jaar++) {
-			output += '\t' + tegens[jaar][partijen[i]];
-		}
-		console.log(output);
-	}
-	console.log();
-
-	console.log('helemaal totaal:');
-	var output = '';
+	data.totaalPerJaar = {};
 	for(jaar=2008; jaar<=2012; jaar++) {
-		var length = 0;
+		data.totaalPerJaar[jaar] = 0;
 		for (var name in besluiten[jaar]) {
-			length++;
+			data.totaalPerJaar[jaar]++;
 		}
-		output += '\t' + length;
 	}
-	console.log(output);
-	console.log();
 
-	var matrix = [];
+	data.matrix = {};
 	for (var jaar=2008; jaar<=2012; jaar++) {
-		matrix[jaar] = {};
+		data.matrix[jaar] = {};
 		for (var i=0; i<partijen.length; i++) {
-			matrix[jaar][partijen[i]] = {};
+			data.matrix[jaar][partijen[i]] = {};
 			for (var j=0; j<partijen.length; j++) {
-				matrix[jaar][partijen[i]][partijen[j]] = {agree: 0, disagree: 0, total: 0, agreeVoor: 0, agreeTegen: 0, disagreeFirstVoor: 0, disagreeFirstTegen: 0};
+				data.matrix[jaar][partijen[i]][partijen[j]] = {eens: 0, oneens: 0, total: 0, eensVoor: 0, eensTegen: 0, oneensBuitensteVoor: 0, oneensBuitensteTegen: 0};
 			}
 		}
 	}
@@ -120,27 +80,27 @@ fs.readFile('Stemmingen.tsv', 'utf8', function (err, data) {
 			var besluit = besluiten[jaar][name];
 			for (var a in besluit) {
 				for (var b in besluit) {
-					matrix[jaar][a][b].total++;
-					matrix[jaar][b][a].total++;
+					data.matrix[jaar][a][b].total++;
+					data.matrix[jaar][b][a].total++;
 					if (besluit[a] === besluit[b]) {
-						matrix[jaar][a][b].agree++;
-						matrix[jaar][b][a].agree++;
+						data.matrix[jaar][a][b].eens++;
+						data.matrix[jaar][b][a].eens++;
 						if (besluit[a]) {
-							matrix[jaar][a][b].agreeVoor++;
-							matrix[jaar][b][a].agreeVoor++;
+							data.matrix[jaar][a][b].eensVoor++;
+							data.matrix[jaar][b][a].eensVoor++;
 						} else {
-							matrix[jaar][a][b].agreeTegen++;
-							matrix[jaar][b][a].agreeTegen++;
+							data.matrix[jaar][a][b].eensTegen++;
+							data.matrix[jaar][b][a].eensTegen++;
 						}
 					} else {
-						matrix[jaar][a][b].disagree++;
-						matrix[jaar][b][a].disagree++;
+						data.matrix[jaar][a][b].oneens++;
+						data.matrix[jaar][b][a].oneens++;
 						if (besluit[a]) {
-							matrix[jaar][a][b].disagreeFirstVoor++;
-							matrix[jaar][b][a].disagreeFirstTegen++;
+							data.matrix[jaar][a][b].oneensBuitensteVoor++;
+							data.matrix[jaar][b][a].oneensBuitensteTegen++;
 						} else {
-							matrix[jaar][a][b].disagreeFirstTegen++;
-							matrix[jaar][b][a].disagreeFirstVoor++;
+							data.matrix[jaar][a][b].oneensBuitensteTegen++;
+							data.matrix[jaar][b][a].oneensBuitensteVoor++;
 						}
 					}
 				}
@@ -148,22 +108,5 @@ fs.readFile('Stemmingen.tsv', 'utf8', function (err, data) {
 		}
 	}
 
-	for (var jaar=2008; jaar<=2012; jaar++) {
-		console.log('jaar ' + jaar + ':');
-
-		var output = '';
-		for (var i=0; i<partijen.length; i++) {
-			output += '\t' + partijen[i];
-		}
-		console.log(output);
-
-		for (var i=0; i<partijen.length; i++) {
-			var output = partijen[i];
-			for (var j=0; j<partijen.length; j++) {
-				output += '\t' + Math.round(matrix[jaar][partijen[i]][partijen[j]].agree / matrix[jaar][partijen[i]][partijen[j]].total * 100);
-			}
-			console.log(output);
-		}
-		console.log();
-	}
+	console.log('module.exports = ' + JSON.stringify(data) + ';');
 });
