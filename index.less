@@ -8,6 +8,10 @@ body, input, button, select, textarea {
 	color: #555;
 }
 
+body {
+	background-color: hsla(195, 100%, 60%, 0.1);
+}
+
 .tooltip {
 	font-size: 13px;
 	.tooltip-inner {
@@ -20,6 +24,7 @@ body, input, button, select, textarea {
 	margin: 0px auto;
 	height: 100%;
 	width: 900px;
+	background-color: #fff;
 }
 
 #header {
@@ -42,14 +47,14 @@ body, input, button, select, textarea {
 
 #year {
 	position: relative;
-	height: 50px;
+	height: 60px;
 	margin-top: 20px;
 
 	.year-container {
 		position: absolute;
 		left: 450px;
 		top: 0px;
-		height: 40px;
+		height: 43px;
 		border: 4px solid hsla(195, 100%, 60%, 0.7);
 
 		.year-slider {
@@ -65,7 +70,7 @@ body, input, button, select, textarea {
 
 		.year-value {
 			position: absolute;
-			right: 10px;
+			right: 15px;
 			top: 12px;
 			font-size: 24px;
 		}
@@ -73,6 +78,8 @@ body, input, button, select, textarea {
 }
 
 #matrix {
+	margin-bottom: 30px;
+
 	.matrix-table {
 		position: relative;
 
@@ -130,4 +137,161 @@ body, input, button, select, textarea {
 			}
 		}
 	}
+}
+
+#content {
+	width: 850px;
+	margin-left: 25px;
+
+	.content-cross {
+		display: none;
+		&.content-cross-visible {
+			display: block;
+		}
+
+		position: relative;
+		height: 250px;
+
+		.content-cross-comparison {
+			position: relative;
+			height: 100px;
+
+			.content-cross-comparison-left {
+				position: absolute;
+				left: 0px;
+				top: 0px;
+				width: 260px;
+			}
+
+			.content-cross-comparison-middle {
+				position: absolute;
+				left: 275px;
+				top: 0px;
+				width: 850px - 275*2;
+
+				.content-cross-comparison-description {
+					font-size: 32px;
+					line-height: 32px;
+					margin-top: 10px;
+					text-align: center;
+					color: black;
+				}
+
+				.content-cross-comparison-value {
+					font-size: 24px;
+					margin-top: 10px;
+					text-align: center;
+				}
+			}
+
+			.content-cross-comparison-right {
+				position: absolute;
+				right: 0px;
+				top: 0px;
+				width: 260px;
+			}
+		}
+	}
+
+	.content-single {
+		display: none;
+		&.content-single-visible {
+			display: block;
+		}
+
+		position: relative;
+		height: 280px;
+
+		.content-single-left-container {
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			width: 260px;
+		}
+
+		.content-single-partij {
+			position: absolute;
+			left: 275px;
+			top: 0px;
+			width: 850px - 275*2;
+			font-size: 32px;
+			line-height: 32px;
+			margin-top: 10px;
+			text-align: center;
+			color: black;
+		}
+
+		.content-single-partij-logo {
+			position: absolute;
+			left: 275px;
+			top: 100px;
+			width: 850px - 275*2;
+			text-align: center;
+		}
+
+		.content-single-right-container {
+			position: absolute;
+			right: 0px;
+			top: 0px;
+			width: 260px;
+		}
+
+		.content-single-title-left, .content-single-title-right {
+			font-size: 22px;
+			line-height: 22px;
+			margin-bottom: 10px;
+		}
+	}
+
+	.content-partij {
+		position: relative;
+		overflow: auto;
+		width: 250px;
+		border: 4px solid hsla(195, 100%, 60%, 0.7);
+		background-color: #fff;
+		display: table;
+
+		.content-partij-logo {
+			text-align: center;
+			width: 250px;
+			height: 100px;
+			line-height: 100px;
+
+			img {
+				vertical-align: middle;
+			}
+		}
+
+		.content-partij-header {
+			margin: 10px;
+
+			.content-partij-name {
+				font-weight: bold;
+				font-size: 16px;
+				line-height: 16px;
+				margin-top: 10px;
+				margin-right: 10px;
+				color: black;
+				height: 25px;
+			}
+
+			.content-partij-regering {
+				margin-top: 10px;
+			}
+		}
+
+		.content-partij-content {
+			width: 230px;
+			margin-left: 10px;
+			margin-top: 10px;
+			margin-bottom: 10px;
+		}
+	}
+}
+
+#footer {
+	text-align: center;
+	margin-top: 10px;
+	border-top: 4px solid hsla(195, 100%, 60%, 0.7);
+	padding: 10px 0;
 }

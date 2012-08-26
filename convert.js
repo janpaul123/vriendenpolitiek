@@ -2,7 +2,17 @@ fs = require('fs');
 assert = require('assert');
 
 var partijenMap = {'vvd': 'vvd', 'pvda': 'pvda', 'cda': 'cda', 'pvv': 'pvv', 'sp': 'sp', 'd66': 'd66', 'groenlinks': 'gl', 'christenunie': 'cu', 'sgp': 'sgp', 'pvdd': 'pvdd', 'brinkman': 'obp', 'verdonk': 'ton'};
-var partijen = ['vvd', 'pvda', 'cda', 'pvv', 'sp', 'd66', 'gl', 'cu', 'sgp', 'pvdd', 'obp', 'ton'];
+var partijen = ['vvd', 'pvda', 'cda', 'pvv', 'sp', 'd66', 'gl', 'cu', 'sgp', 'pvdd', 'ton', 'obp'];
+
+var regeringen = {
+	2008: {'vvd': 'oppositie', 'pvda': 'regering', 'cda': 'regering', 'pvv': 'oppositie', 'sp': 'oppositie', 'd66': 'oppositie', 'gl': 'oppositie', 'cu': 'regering', 'sgp': 'oppositie', 'pvdd': 'oppositie', 'obp': 'niet in kamer', 'ton': 'oppositie'},
+	2009: {'vvd': 'oppositie', 'pvda': 'regering', 'cda': 'regering', 'pvv': 'oppositie', 'sp': 'oppositie', 'd66': 'oppositie', 'gl': 'oppositie', 'cu': 'regering', 'sgp': 'oppositie', 'pvdd': 'oppositie', 'obp': 'niet in kamer', 'ton': 'oppositie'},
+	2010: {'vvd': 'oppositie/regering', 'pvda': 'regering/oppositie', 'cda': 'regering', 'pvv': 'oppositie/gedoogpartner', 'sp': 'oppositie', 'd66': 'oppositie', 'gl': 'oppositie', 'cu': 'regering', 'sgp': 'oppositie', 'pvdd': 'oppositie', 'obp': 'niet in kamer', 'ton': 'oppositie'},
+	2011: {'vvd': 'regering', 'pvda': 'oppositie', 'cda': 'regering', 'pvv': 'gedoogpartner', 'sp': 'oppositie', 'd66': 'oppositie', 'gl': 'oppositie', 'cu': 'oppositie', 'sgp': 'oppositie', 'pvdd': 'oppositie', 'obp': 'niet in kamer', 'ton': 'niet in kamer'},
+	2012: {'vvd': 'regering', 'pvda': 'oppositie', 'cda': 'regering', 'pvv': 'gedoogpartner', 'sp': 'oppositie', 'd66': 'oppositie', 'gl': 'oppositie', 'cu': 'oppositie', 'sgp': 'oppositie', 'pvdd': 'oppositie', 'obp': 'oppositie', 'ton': 'niet in kamer'}
+};
+
+var namen = {'vvd': 'Volkspartij voor Vrijheid en Democratie', 'pvda': 'Partij van de Arbeid', 'cda': 'Christen-Democratisch Appèl', 'pvv': 'Partij voor de Vrijheid', 'sp': 'Socialistische Partij', 'd66': 'Democraten 66', 'gl': 'GroenLinks', 'cu': 'ChristenUnie', 'sgp': 'Staatkundig Gereformeerde Partij', 'pvdd': 'Partij voor de Dieren', 'obp': 'Onafhankelijke Burger Partij', 'ton': 'Trots op Nederland'};
 
 fs.readFile('Stemmingen.tsv', 'utf8', function (err, input) {
 	if (err) {
@@ -11,7 +21,7 @@ fs.readFile('Stemmingen.tsv', 'utf8', function (err, input) {
 
 	var lines = input.split('\n');
 
-	var data = {partijen: partijen, voors: {}, tegens: {}, totaalPerPartij: {}, minYear: 2008, maxYear: 2012};
+	var data = {partijen: partijen, regeringen: regeringen, namen: namen, voors: {}, tegens: {}, totaalPerPartij: {}, minYear: 2008, maxYear: 2012};
 	var besluiten = {};
 
 	for (var year=2008; year<=2012; year++) {
