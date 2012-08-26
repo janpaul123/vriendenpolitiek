@@ -1,21 +1,15 @@
 all: assets
 
 # assets
-assets: assets/js/browser.js assets/index.css
+assets: assets/browserify.js assets/index.css
 
-assets/js/browser.js: browser.js
-	cp browser.js assets/js/browser.js
+assets/browserify.js: index.js client.js data.js clayer/*.js
+	node_modules/.bin/browserify index.js -d -o assets/browserify.js
 
-assets/index.css: style.css
-	cp style.css assets/index.css
+assets/index.css: index.less bootstrap/less/*.less clayer/*.less
+	node_modules/.bin/lessc index.less > assets/index.css
 
-browser.js: *.js */*.js data.js
-	node_modules/.bin/browserify cli-assets.js -d -o browser.js
-
-style.css: cli-assets.less *.less */*.less bootstrap/less/*.less
-	node_modules/.bin/lessc cli-assets.less > style.css
-
-data.js:
+data.js: convert.js Stemmingen.tsv
 	node convert.js > data.js
 
 .PHONY: all assets

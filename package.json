@@ -2,13 +2,13 @@
   "name": "vriendenpolitiek",
   "preferGlobal": "false",
   "version": "0.1.0",
-  "author": "Jan Paul Posma <jsmm@janpaulposma.nl>",
+  "author": "Jan Paul Posma <vriendenpolitiek@janpaulposma.nl>",
   "description": "",
   "keywords": [
     "vriendenpolitiek", "politiek"
   ],
   "dependencies": {
-    "browserify"     : "1.10.6",
+    "browserify"     : "1.15.3",
     "less"           : "1.3.x",
     // "uglify-js"      : "1.3.x",
     // "file"           : "0.2.x",

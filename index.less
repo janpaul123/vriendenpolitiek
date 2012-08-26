@@ -1,0 +1,133 @@
+@import "bootstrap/less/bootstrap.less";
+@import "clayer/index.less";
+@import ~"url(http://fonts.googleapis.com/css?family=Arimo:400,700)";
+
+// some bootstrap tweaks
+body, input, button, select, textarea {
+	font-family: Arimo, Helvetica, Arial, sans-serif;
+	color: #555;
+}
+
+.tooltip {
+	font-size: 13px;
+	.tooltip-inner {
+		padding: 6px 8px;
+	}
+}
+
+.main {
+	padding: 0px;
+	margin: 0px auto;
+	height: 100%;
+	width: 900px;
+}
+
+#header {
+	text-align: center;
+	padding-top: 20px;
+
+	.header-title {
+		font-size: 30px;
+		color: hsla(195, 100%, 60%, 0.7);
+
+		&, &:hover, &:active {
+			text-decoration: none;
+		}
+
+		.header-vrienden {
+			font-weight: bold;
+		}
+	}
+}
+
+#year {
+	position: relative;
+	height: 50px;
+	margin-top: 20px;
+
+	.year-container {
+		position: absolute;
+		left: 450px;
+		top: 0px;
+		height: 40px;
+		border: 4px solid hsla(195, 100%, 60%, 0.7);
+
+		.year-slider {
+			position: absolute;
+			left: 10px;
+			top: 10px;
+			padding: 10px 0px;
+
+			.clayer-slider-marker {
+				background-color: hsla(195, 100%, 60%, 0.7);
+			}
+		}
+
+		.year-value {
+			position: absolute;
+			right: 10px;
+			top: 12px;
+			font-size: 24px;
+		}
+	}
+}
+
+#matrix {
+	.matrix-table {
+		position: relative;
+
+		.matrix-container {
+			position: absolute;
+			width: 44px;
+			height: 44px;
+			cursor: pointer;
+			background-color: rgba(0,0,0,0);
+			z-index: 10;
+		}
+
+		.matrix-column-container {
+			top: 0px;
+		}
+
+		.matrix-row-container {
+			left: 0px;
+		}
+
+		.matrix-cell {
+			position: relative;
+			left: 2px;
+			top: 2px;
+			width: 40px;
+			height: 40px;
+			max-width: 40px;
+			max-height: 40px;
+			overflow: hidden;
+			display: table-cell;
+			text-align: center;
+			vertical-align: middle;
+			font-size: 14px;
+		}
+
+		.matrix-selection {
+			position: absolute;
+			display: none;
+			z-index: 5;
+
+			&.matrix-selection-visible {
+				display: block;
+			}
+
+			&.matrix-selection-horizontal {
+				margin-top: -2px;
+				border-top: 4px solid hsla(195, 100%, 60%, 0.7);
+				border-bottom: 4px solid hsla(195, 100%, 60%, 0.7);
+			}
+
+			&.matrix-selection-vertical {
+				margin-left: -2px;
+				border-left: 4px solid hsla(195, 100%, 60%, 0.7);
+				border-right: 4px solid hsla(195, 100%, 60%, 0.7);
+			}
+		}
+	}
+}
