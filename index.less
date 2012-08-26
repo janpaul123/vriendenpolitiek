@@ -90,6 +90,8 @@ body {
 			cursor: pointer;
 			background-color: rgba(0,0,0,0);
 			z-index: 10;
+			padding-left: 2px;
+			padding-top: 2px;
 		}
 
 		.matrix-column-container {
@@ -101,9 +103,6 @@ body {
 		}
 
 		.matrix-cell {
-			position: relative;
-			left: 2px;
-			top: 2px;
 			width: 38px;
 			height: 38px;
 			max-width: 38px;
@@ -119,21 +118,12 @@ body {
 			position: absolute;
 			display: none;
 			z-index: 5;
+			background-color: hsla(195, 100%, 60%, 0.7);
+			margin-left: 2px;
+			margin-top: 2px;
 
 			&.matrix-selection-visible {
 				display: block;
-			}
-
-			&.matrix-selection-horizontal {
-				margin-top: -2px;
-				border-top: 4px solid hsla(195, 100%, 60%, 0.7);
-				border-bottom: 4px solid hsla(195, 100%, 60%, 0.7);
-			}
-
-			&.matrix-selection-vertical {
-				margin-left: -2px;
-				border-left: 4px solid hsla(195, 100%, 60%, 0.7);
-				border-right: 4px solid hsla(195, 100%, 60%, 0.7);
 			}
 		}
 	}
