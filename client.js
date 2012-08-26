@@ -76,6 +76,10 @@ client.Client.prototype = {
 		this.previewState({year: year, row: this.state.row, column: this.state.column});
 	},
 
+	clearPartij: function(year) {
+		this.setState({year: this.state.year});
+	},
+
 	selectYear: function(year) {
 		this.setState({year: year, row: this.state.row, column: this.state.column});
 	}
@@ -89,9 +93,9 @@ client.Matrix.prototype = {
 		this.year = 0;
 
 		this.$table = $('<div class="matrix-table"></div>');
-		this.$table.css('margin-left', (900-44*(this.data.partijen.length+1))/2);
-		this.$table.css('width', 44*(this.data.partijen.length+1));
-		this.$table.css('height', 44*(this.data.partijen.length+1));
+		this.$table.css('margin-left', (900-42*(this.data.partijen.length+1))/2);
+		this.$table.css('width', 42*(this.data.partijen.length+1));
+		this.$table.css('height', 42*(this.data.partijen.length+1));
 		$matrix.append(this.$table);
 		this.$table.on('mouseleave', this.mouseLeave.bind(this));
 
@@ -105,7 +109,7 @@ client.Matrix.prototype = {
 			partij = this.data.partijen[x];
 
 			var $columnContainer = $('<div class="matrix-column-container matrix-container"></div>');
-			$columnContainer.css('left', 44*(x+1));
+			$columnContainer.css('left', 42*(x+1));
 			this.$table.append($columnContainer);
 
 			var $column = $('<div class="matrix-column-cell matrix-cell"></div>');
@@ -123,7 +127,7 @@ client.Matrix.prototype = {
 			partij = this.data.partijen[y];
 
 			var $rowContainer = $('<div class="matrix-row-container matrix-container"></div>');
-			$rowContainer.css('top', 44*(y+1));
+			$rowContainer.css('top', 42*(y+1));
 			this.$table.append($rowContainer);
 
 			var $row = $('<div class="matrix-row-cell matrix-cell"></div>');
@@ -139,8 +143,8 @@ client.Matrix.prototype = {
 				var partij2 = this.data.partijen[x];
 
 				var $cellContainer = $('<div class="matrix-inner-container matrix-container"></div>');
-				$cellContainer.css('left', 44*(x+1));
-				$cellContainer.css('top', 44*(y+1));
+				$cellContainer.css('left', 42*(x+1));
+				$cellContainer.css('top', 42*(y+1));
 				this.$table.append($cellContainer);
 
 				var $cell = $('<div class="matrix-inner-cell matrix-cell"></div>');
@@ -184,16 +188,34 @@ client.Matrix.prototype = {
 	},
 
 	columnClick: function(event) {
-		this.delegate.selectColumn($(event.delegateTarget).data('partij'));
+		var partij = $(event.delegateTarget).data('partij');
+		if (partij === this.state.column && this.state.row === undefined) {
+			this.delegate.clearPartij();
+			this.delegate.previewColumn(partij);
+		} else {
+			this.delegate.selectColumn(partij);
+		}
 	},
 
 	rowClick: function(event) {
-		this.delegate.selectRow($(event.delegateTarget).data('partij'));
+		var partij = $(event.delegateTarget).data('partij');
+		if (partij === this.state.row && this.state.column === undefined) {
+			this.delegate.clearPartij();
+			this.delegate.previewRow(partij);
+		} else {
+			this.delegate.selectRow(partij);
+		}
 	},
 
 	cellClick: function(event) {
 		var $target = $(event.delegateTarget);
-		this.delegate.selectCell($target.data('partij'), $target.data('partij2'));
+		var partij = $(event.delegateTarget).data('partij'), partij2 = $(event.delegateTarget).data('partij2');
+		if (partij === this.state.row && partij2 === this.state.column) {
+			this.delegate.clearPartij();
+			this.delegate.previewCell(partij, partij2);
+		} else {
+			this.delegate.selectCell(partij, partij2);
+		}
 	},
 
 	renderTable: function(year) {
@@ -275,21 +297,21 @@ client.Matrix.prototype = {
 			if (state.row !== undefined || state.column !== undefined) {
 				this.$selection.addClass('matrix-selection-visible');
 				if (state.row !== undefined) {
-					this.$selection.css('top', 44*(this.data.partijen.indexOf(state.row)+1));
-					this.$selection.css('height', 44-4);
+					this.$selection.css('top', 42*(this.data.partijen.indexOf(state.row)+1));
+					this.$selection.css('height', 42-4);
 					this.$selection.addClass('matrix-selection-horizontal');
 				} else {
 					this.$selection.css('top', 0);
-					this.$selection.css('height', 44*(this.data.partijen.length+1));
+					this.$selection.css('height', 42*(this.data.partijen.length+1));
 					this.$selection.removeClass('matrix-selection-horizontal');
 				}
 				if (state.column !== undefined) {
-					this.$selection.css('left', 44*(this.data.partijen.indexOf(state.column)+1));
-					this.$selection.css('width', 44-4);
+					this.$selection.css('left', 42*(this.data.partijen.indexOf(state.column)+1));
+					this.$selection.css('width', 42-4);
 					this.$selection.addClass('matrix-selection-vertical');
 				} else {
 					this.$selection.css('left', 0);
-					this.$selection.css('width', 44*(this.data.partijen.length+1));
+					this.$selection.css('width', 42*(this.data.partijen.length+1));
 					this.$selection.removeClass('matrix-selection-vertical');
 				}
 			} else {
