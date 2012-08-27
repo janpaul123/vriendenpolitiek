@@ -14,6 +14,12 @@ clayer.setCss3 = function($element, name, value, addBrowserToValue) {
 	}
 };
 
+clayer.isTouch = ('ontouchstart' in document.documentElement);
+clayer.initTouchElements = function($element) {
+	$element.find('.clayer-touch').toggle(clayer.isTouch);
+	$element.find('.clayer-mouse').toggle(!clayer.isTouch);
+};
+
 clayer.Touchable = function() { return this.init.apply(this, arguments); };
 clayer.Touchable.prototype = {
 	init: function($element, delegate) {
@@ -116,10 +122,9 @@ clayer.Touchable.prototype = {
 			'mousedown': this.mouseDown,
 			'mousemove': this.hoverMove,
 			'mouseleave': this.hoverLeave
-		}); // we're on a touch device
+		}); // we're on a touch device (safer than checking using clayer.isTouch)
 
-		if (!this.isTouchable || this.touchEvent || event.originalEvent.touches.length > 1) {
-			// only single touch for now
+		if (!this.isTouchable || this.touchEvent || event.originalEvent.targetTouches.length > 1) {
 			this.touchEnd(event);
 		} else {
 			this.$document.on({
@@ -128,7 +133,7 @@ clayer.Touchable.prototype = {
 				touchcancel: this.touchEnd
 			});
 		
-			this.touchEvent = new clayer.PositionEvent(this.$element, event.originalEvent.touches[0], event.timeStamp, false);
+			this.touchEvent = new clayer.PositionEvent(this.$element, event.originalEvent.targetTouches[0], event.timeStamp, false);
 			this.delegate.touchDown(this.touchEvent);
 		}
 		return false;
@@ -136,15 +141,20 @@ clayer.Touchable.prototype = {
 
 	touchMove: function(event) {
 		if (this.isTouchable && this.touchEvent) {
-			this.touchEvent.move(event.originalEvent.touches[0], event.timeStamp);
-			this.delegate.touchMove(this.touchEvent);
+			var touchEvent = this.findTouchEvent(event.originalEvent.touches);
+			if (touchEvent === null) {
+				this.touchEnd(event);
+			} else {
+				this.touchEvent.move(touchEvent, event.timeStamp);
+				this.delegate.touchMove(this.touchEvent);
+			}
 		}
 		return false;
 	},
 
 	touchEnd: function(event) {
 		if (this.isTouchable && this.touchEvent) {
-			this.touchEvent.up(event, event.timeStamp);
+			this.touchEvent.up(this.findTouchEvent(event.originalEvent.touches), event.timeStamp);
 			this.delegate.touchUp(this.touchEvent);
 			this.touchEvent = null;
 		}
@@ -173,6 +183,15 @@ clayer.Touchable.prototype = {
 			this.hoverEvent = null;
 		}
 		return false;
+	},
+
+	findTouchEvent: function(touches) {
+		for (var i=0; i<touches.length; i++) {
+			if (touches[i].identifier === this.touchEvent.event.identifier) {
+				return touches[i];
+			}
+		}
+		return null;
 	}
 };
 
@@ -200,7 +219,7 @@ clayer.PositionEvent.prototype = {
 	},
 
 	up: function(event, timestamp) {
-		this.event = event;
+		this.event = event || this.event;
 		this.timestamp = timestamp;
 		this.wasTap = !this.hasMoved && (this.getTimeSinceGoingDown() < 300);
 	},
