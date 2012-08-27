@@ -9,15 +9,15 @@ var clayer = require('./clayer');
 client.Client = function() { return this.init.apply(this, arguments); };
 client.Client.prototype = {
 	init: function() {
-		this.$year = $('#year');
+		this.$time = $('#time');
 		this.$content = $('#content');
 		this.data = require('./data');
 		this.state = null;
 		this.pState = null;
-		this.year = new client.Year(this, $('#year'), this.data);
+		this.time = new client.Time(this, $('#time'), this.data);
 		this.matrix = new client.Matrix(this, $('#matrix'), this.data);
 		this.content = new client.Content(this, $('#content'), this.data);
-		this.setState({year: 2012});
+		this.setState({time: 'zomer 2012'});
 
 		for (var i=0; i<this.data.partijen.length; i++) {
 			var image = new Image();
@@ -37,7 +37,7 @@ client.Client.prototype = {
 	},
 
 	updateStates: function() {
-		this.year.setState(this.state, this.pState);
+		this.time.setState(this.state, this.pState);
 		this.matrix.setState(this.state, this.pState);
 		this.content.setState(this.state, this.pState);
 	},
@@ -49,39 +49,39 @@ client.Client.prototype = {
 	},
 
 	previewColumn: function(partij) {
-		this.previewState({year: this.state.year, column: partij});
+		this.previewState({time: this.state.time, column: partij});
 	},
 
 	previewRow: function(partij) {
-		this.previewState({year: this.state.year, row: partij});
+		this.previewState({time: this.state.time, row: partij});
 	},
 
 	previewCell: function(partij, partij2) {
-		this.previewState({year: this.state.year, row: partij, column: partij2});
+		this.previewState({time: this.state.time, row: partij, column: partij2});
 	},
 
 	selectColumn: function(partij) {
-		this.setState({year: this.state.year, column: partij});
+		this.setState({time: this.state.time, column: partij});
 	},
 
 	selectRow: function(partij) {
-		this.setState({year: this.state.year, row: partij});
+		this.setState({time: this.state.time, row: partij});
 	},
 
 	selectCell: function(partij, partij2) {
-		this.setState({year: this.state.year, row: partij, column: partij2});
+		this.setState({time: this.state.time, row: partij, column: partij2});
 	},
 
-	previewYear: function(year) {
-		this.previewState({year: year, row: this.state.row, column: this.state.column});
+	previewTime: function(time) {
+		this.previewState({time: time, row: this.state.row, column: this.state.column});
 	},
 
-	clearPartij: function(year) {
-		this.setState({year: this.state.year});
+	clearPartij: function(time) {
+		this.setState({time: this.state.time});
 	},
 
-	selectYear: function(year) {
-		this.setState({year: year, row: this.state.row, column: this.state.column});
+	selectTime: function(time) {
+		this.setState({time: time, row: this.state.row, column: this.state.column});
 	}
 };
 
@@ -90,7 +90,7 @@ client.Matrix.prototype = {
 	init: function(delegate, $matrix, data) {
 		this.delegate = delegate;
 		this.data = data;
-		this.year = 0;
+		this.time = '';
 
 		this.$table = $('<div class="matrix-table"></div>');
 		this.$table.css('margin-left', (900-42*(this.data.partijen.length+1))/2);
@@ -165,7 +165,7 @@ client.Matrix.prototype = {
 	},
 
 	setState: function(state, pState) {
-		this.renderTable((pState || state).year);
+		this.renderTable((pState || state).time);
 		this.showPreview(pState || state);
 		this.showState(state);
 	},
@@ -218,13 +218,13 @@ client.Matrix.prototype = {
 		}
 	},
 
-	renderTable: function(year) {
-		if (this.year !== year) {
+	renderTable: function(time) {
+		if (this.time !== time) {
 			for (var y=0; y<this.data.partijen.length; y++) {
 				var partij = this.data.partijen[y];
 				for (var x=0; x<this.data.partijen.length; x++) {
 					var partij2 = this.data.partijen[x];
-					var position = this.data.matrix[year][partij][partij2];
+					var position = this.data.matrix[time][partij][partij2];
 					var $cell = this.$cells[partij][partij2];
 					var fraction = position.eens/position.total;
 					if (position.total > 0) {
@@ -236,7 +236,7 @@ client.Matrix.prototype = {
 					}
 				}
 			}
-			this.year = year;
+			this.time = time;
 		}
 	},
 
@@ -264,7 +264,7 @@ client.Matrix.prototype = {
 					var position, $cell, fraction;
 
 					if ((this.pState.row || partij ) === partij && (this.pState.column || partij2) === partij2) {
-						position = this.data.matrix[state.year][partij][partij2];
+						position = this.data.matrix[state.time][partij][partij2];
 						$cell = this.$cells[partij][partij2];
 						fraction = position.eens/position.total;
 						if (position.total > 0) {
@@ -276,7 +276,7 @@ client.Matrix.prototype = {
 
 					if (state.row !== undefined || state.column !== undefined) {
 						if ((state.row || partij ) === partij && (state.column || partij2) === partij2) {
-							position = this.data.matrix[state.year][partij][partij2];
+							position = this.data.matrix[state.time][partij][partij2];
 							$cell = this.$cells[partij][partij2];
 							fraction = position.eens/position.total;
 							if (position.total > 0) {
@@ -319,47 +319,51 @@ client.Matrix.prototype = {
 	}
 };
 
-client.Year = function() { return this.init.apply(this, arguments); };
-client.Year.prototype = {
-	init: function(delegate, $year, data) {
+client.Time = function() { return this.init.apply(this, arguments); };
+client.Time.prototype = {
+	init: function(delegate, $time, data) {
 		this.delegate = delegate;
-		this.$year = $year;
+		this.$time = $time;
 		this.data = data;
 
-		this.$container = $('<div class="year-container"></div>');
-		this.$year.append(this.$container);
+		this.$container = $('<div class="time-container"></div>');
+		this.$time.append(this.$container);
 
-		this.$value = $('<div class="year-value"></div>');
+		this.$value = $('<div class="time-value"></div>');
 		this.$container.append(this.$value);
 
-		this.$slider = $('<div class="year-slider"></div>');
+		this.$desc = $('<div class="time-desc"></div>');
+		this.$container.append(this.$desc);
+
+		this.$slider = $('<div class="time-slider"></div>');
 		this.$container.append(this.$slider);
 
-		this.slider = new clayer.Slider(this.$slider, this, 50);
-		var width = 50*(data.maxYear-data.minYear+1);
+		this.slider = new clayer.Slider(this.$slider, this, 20);
+		var width = 20*(this.data.tijden.length);
 		this.$slider.width(width);
 
-		width += 100;
+		width += 170;
 		this.$container.width(width);
 		this.$container.css('margin-left', -width/2);
 	},
 
 	setState: function(state, pState) {
-		var year = (pState || state).year;
-		if (state.year === year) {
-			this.slider.setValue(year - this.data.minYear);
+		var time = (pState || state).time;
+		if (state.time === time) {
+			this.slider.setValue(this.data.tijden.indexOf(time));
 		} else {
-			this.slider.setKnobValue(year - this.data.minYear);
+			this.slider.setKnobValue(this.data.tijden.indexOf(time));
 		}
-		this.$value.text(year);
+		this.$value.text(time);
+		this.$desc.text(this.data.tijdenOmschrijvingen[time]);
 	},
 
 	sliderChanged: function(value) {
-		this.delegate.selectYear(Math.min(this.data.minYear + value, this.data.maxYear));
+		this.delegate.selectTime(this.data.tijden[value]);
 	},
 
 	sliderPreviewChanged: function(value) {
-		this.delegate.previewYear(Math.min(this.data.minYear + value, this.data.maxYear));
+		this.delegate.previewTime(this.data.tijden[value]);
 	}
 };
 
@@ -399,7 +403,7 @@ client.Content.prototype = {
 
 		var $description = this.$cross.find('.content-cross-comparison-description');
 		var $value = this.$cross.find('.content-cross-comparison-value');
-		var position = this.data.matrix[state.year][state.row][state.column];
+		var position = this.data.matrix[state.time][state.row][state.column];
 		var fraction = position.eens/position.total, percentage = Math.round(fraction*100);
 
 		if (position.total > 0) {
@@ -424,8 +428,8 @@ client.Content.prototype = {
 			$description.text('');
 		}
 
-		this.partijCrossLeft.setPartijYear(state.row, state.year);
-		this.partijCrossRight.setPartijYear(state.column, state.year);
+		this.partijCrossLeft.setPartijTime(state.row, state.time);
+		this.partijCrossRight.setPartijTime(state.column, state.time);
 	},
 
 	showSingle: function(state) {
@@ -436,7 +440,7 @@ client.Content.prototype = {
 
 		for (var i=0; i<this.data.partijen.length; i++) {
 			var partij2 = this.data.partijen[i];
-			var position = this.data.matrix[state.year][partij][partij2];
+			var position = this.data.matrix[state.time][partij][partij2];
 			if (partij !== partij2 && position.total > 0) {
 				var fraction = position.eens/position.total;
 				if (fraction > vriendFraction) {
@@ -457,8 +461,8 @@ client.Content.prototype = {
 		if (vriend !== null && vijand !== null) {
 			this.$single.find('.content-single-left-container').show();
 			this.$single.find('.content-single-right-container').show();
-			this.partijSingleLeft.setPartijYear(vriend, state.year);
-			this.partijSingleRight.setPartijYear(vijand, state.year);
+			this.partijSingleLeft.setPartijTime(vriend, state.time);
+			this.partijSingleRight.setPartijTime(vijand, state.time);
 		} else {
 			this.$single.find('.content-single-left-container').hide();
 			this.$single.find('.content-single-right-container').hide();
@@ -476,15 +480,19 @@ client.Partij.prototype = {
 		this.$container.append(this.$partij);
 	},
 
-	setPartijYear: function(partij, year) {
-		if (this.partij !== partij || this.year !== year) {
+	setPartijTime: function(partij, time) {
+		if (this.partij !== partij || this.time !== time) {
 			this.$partij.find('.content-partij-logo').html('<img class="partij-logo" src="/img/' + partij +'.png"/>');
 			this.$partij.find('.content-partij-name').text(this.data.namen[partij]);
-			this.$partij.find('.content-partij-regering').text(this.data.regeringen[year][partij]);
-			this.$partij.find('.content-partij-voor').text(Math.round(this.data.voors[year][partij]/this.data.totaalPerPartij[year][partij]*100) + '% voor (' + this.data.voors[year][partij] + ')');
-			this.$partij.find('.content-partij-totaal').text(Math.round(this.data.totaalPerPartij[year][partij]/this.data.totaalPerJaar[year]*100,2) + '% totaal (' + this.data.totaalPerPartij[year][partij] + ')');
+			this.$partij.find('.content-partij-regering').text(this.data.regeringen[time][partij]);
+			if (this.data.totaalPerPartij[time][partij] > 0) {
+				this.$partij.find('.content-partij-voor').text(Math.round(this.data.voors[time][partij]/this.data.totaalPerPartij[time][partij]*100) + '% voor (' + this.data.voors[time][partij] + '/' + this.data.totaalPerPartij[time][partij] + ')');
+			} else {
+				this.$partij.find('.content-partij-voor').text('');
+			}
+			this.$partij.find('.content-partij-totaal').text('');
 			this.partij = partij;
-			this.year = year;
+			this.time = time;
 		}
 	}
 };
