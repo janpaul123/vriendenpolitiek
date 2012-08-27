@@ -9,11 +9,16 @@ var options = {
 	},
 	browserify: {
 		entry: __dirname + '/index.js',
-		debug: true
+		debug: true,
+		watch: true
 	},
 	less: {
 		src: __dirname + '',
-		dest: __dirname + '/assets'
+		dest: __dirname + '/assets',
+		debug: true,
+		once: false,
+		compress: false,
+		optimization: 0
 	},
 	logs: {
 		requests: true
@@ -31,10 +36,6 @@ if (options.logs.requests) app.use(connect.logger('tiny'));
 
 app.use(lessMiddleware(options.less))
 	.use(connect.favicon(__dirname + '/assets/favicon.ico'))
-	.use(browserify(options.browserify))
-	.use('', function(req, res, next) {
-		if(req.url.indexOf('/home') === 0 || req.url.indexOf('/full') === 0) req.url = '/';
-		next();
-	})
 	.use(connect['static'](options.assets, options.staticOptions))
+	.use(browserify(options.browserify))
 	.listen(options.port);
