@@ -19,10 +19,10 @@ client.Client.prototype = {
 		this.content = new client.Content(this, $('#content'), this.data);
 		this.setState({time: 'zomer 2012'});
 
-		for (var i=0; i<this.data.partijen.length; i++) {
+		/*for (var i=0; i<this.data.partijen.length; i++) {
 			var image = new Image();
 			image.src = '/img/' + this.data.partijen[i] + '.png';
-		}
+		}*/
 	},
 
 	setState: function(state) {
