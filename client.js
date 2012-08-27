@@ -17,7 +17,7 @@ client.Client.prototype = {
 		this.time = new client.Time(this, $('#time'), this.data);
 		this.matrix = new client.Matrix(this, $('#matrix'), this.data);
 		this.content = new client.Content(this, $('#content'), this.data);
-		this.setState({time: 'zomer 2012'});
+		this.setState(null, {time: 'zomer 2012'});
 
 		/*for (var i=0; i<this.data.partijen.length; i++) {
 			var image = new Image();
@@ -25,15 +25,14 @@ client.Client.prototype = {
 		}*/
 	},
 
-	setState: function(state) {
-		this.pState = null;
-		this.state = state;
+	setState: function(pState, state) {
+		this.pState = pState;
+		this.state = state || this.state;
 		this.updateStates();
 	},
 
-	previewState: function(state) {
-		this.pState = state;
-		this.updateStates();
+	resetState: function() {
+		this.setState(null, this.state);
 	},
 
 	updateStates: function() {
@@ -42,46 +41,29 @@ client.Client.prototype = {
 		this.content.setState(this.state, this.pState);
 	},
 
-	resetState: function() {
-		if (this.pState !== null) {
-			this.setState(this.state);
-		}
+	setColumn: function(partij, preview) {
+		var state = {time: this.state.time, column: partij};
+		this.setState(state, preview ? null : state);
 	},
 
-	previewColumn: function(partij) {
-		this.previewState({time: this.state.time, column: partij});
+	setRow: function(partij, preview) {
+		var state = {time: this.state.time, row: partij};
+		this.setState(state, preview ? null : state);
 	},
 
-	previewRow: function(partij) {
-		this.previewState({time: this.state.time, row: partij});
+	setCell: function(partij, partij2, preview) {
+		var state = {time: this.state.time, row: partij, column: partij2};
+		this.setState(state, preview ? null : state);
 	},
 
-	previewCell: function(partij, partij2) {
-		this.previewState({time: this.state.time, row: partij, column: partij2});
+	clearPartij: function() {
+		var state = {time: this.state.time};
+		this.setState(state, state);
 	},
 
-	selectColumn: function(partij) {
-		this.setState({time: this.state.time, column: partij});
-	},
-
-	selectRow: function(partij) {
-		this.setState({time: this.state.time, row: partij});
-	},
-
-	selectCell: function(partij, partij2) {
-		this.setState({time: this.state.time, row: partij, column: partij2});
-	},
-
-	previewTime: function(time) {
-		this.previewState({time: time, row: this.state.row, column: this.state.column});
-	},
-
-	clearPartij: function(time) {
-		this.setState({time: this.state.time});
-	},
-
-	selectTime: function(time) {
-		this.setState({time: time, row: this.state.row, column: this.state.column});
+	setTime: function(time, preview) {
+		var state = {time: time, row: this.state.row, column: this.state.column};
+		this.setState(state, preview ? null : state);
 	}
 };
 
@@ -97,11 +79,8 @@ client.Matrix.prototype = {
 		this.$table.css('width', 42*(this.data.partijen.length+1));
 		this.$table.css('height', 42*(this.data.partijen.length+1));
 		$matrix.append(this.$table);
-		this.$table.on('mouseleave', this.mouseLeave.bind(this));
 
-		var $topLeft = $('<div class="matrix-topleft"></div>');
-		this.$table.append($topLeft);
-		$topLeft.on('mouseenter', this.mouseLeave.bind(this));
+		this.scrubbable = new clayer.Scrubbable(this.$table, this);
 
 		this.$columns = {};
 		var partij;
@@ -110,9 +89,6 @@ client.Matrix.prototype = {
 
 			var $columnContainer = $('<div class="matrix-column-container matrix-container"></div>');
 			$columnContainer.css('left', 42*(x+1));
-			$columnContainer.data('partij', partij);
-			$columnContainer.on('click', this.columnClick.bind(this));
-			$columnContainer.on('mousemove', this.columnMouseMove.bind(this));
 			this.$table.append($columnContainer);
 
 			var $column = $('<div class="matrix-column-cell matrix-cell"></div>');
@@ -128,9 +104,6 @@ client.Matrix.prototype = {
 
 			var $rowContainer = $('<div class="matrix-row-container matrix-container"></div>');
 			$rowContainer.css('top', 42*(y+1));
-			$rowContainer.data('partij', partij);
-			$rowContainer.on('click', this.rowClick.bind(this));
-			$rowContainer.on('mousemove', this.rowMouseMove.bind(this));
 			this.$table.append($rowContainer);
 
 			var $row = $('<div class="matrix-row-cell matrix-cell"></div>');
@@ -145,10 +118,6 @@ client.Matrix.prototype = {
 				var $cellContainer = $('<div class="matrix-inner-container matrix-container"></div>');
 				$cellContainer.css('left', 42*(x+1));
 				$cellContainer.css('top', 42*(y+1));
-				$cellContainer.data('partij', partij);
-				$cellContainer.data('partij2', partij2);
-				$cellContainer.on('click', this.cellClick.bind(this));
-				$cellContainer.on('mousemove', this.cellMouseMove.bind(this));
 				this.$table.append($cellContainer);
 
 				var $cell = $('<div class="matrix-inner-cell matrix-cell"></div>');
@@ -171,50 +140,35 @@ client.Matrix.prototype = {
 	},
 
 	mouseLeave: function() {
+		
+	},
+
+	scrubMove: function(x, y, down) {
+		var row = Math.floor(y/42), column = Math.floor(x/42);
+		if (row-1 < this.data.partijen.length && column-1 < this.data.partijen.length) {
+			var partij = this.data.partijen[row-1], partij2 = this.data.partijen[column-1];
+
+			if (down && partij !== undefined || partij2 !== undefined) {
+				this.wasSet = (partij === this.state.row && partij2 === this.state.column);
+			}
+
+			if (partij === undefined) {
+				this.delegate.setColumn(this.data.partijen[column-1], !down);
+			} else if (partij2 === undefined) {
+				this.delegate.setRow(this.data.partijen[row-1], !down);
+			} else if (partij !== undefined && partij2 !== undefined) {
+				this.delegate.setCell(this.data.partijen[row-1], this.data.partijen[column-1], !down);
+			}
+		}
+	},
+
+	scrubLeave: function() {
 		this.delegate.resetState();
 	},
 
-	columnMouseMove: function(event) {
-		this.delegate.previewColumn($(event.delegateTarget).data('partij'));
-	},
-
-	rowMouseMove: function(event) {
-		this.delegate.previewRow($(event.delegateTarget).data('partij'));
-	},
-
-	cellMouseMove: function(event) {
-		var $target = $(event.delegateTarget);
-		this.delegate.previewCell($target.data('partij'), $target.data('partij2'));
-	},
-
-	columnClick: function(event) {
-		var partij = $(event.delegateTarget).data('partij');
-		if (partij === this.state.column && this.state.row === undefined) {
+	scrubClick: function() {
+		if (this.wasSet) {
 			this.delegate.clearPartij();
-			this.delegate.previewColumn(partij);
-		} else {
-			this.delegate.selectColumn(partij);
-		}
-	},
-
-	rowClick: function(event) {
-		var partij = $(event.delegateTarget).data('partij');
-		if (partij === this.state.row && this.state.column === undefined) {
-			this.delegate.clearPartij();
-			this.delegate.previewRow(partij);
-		} else {
-			this.delegate.selectRow(partij);
-		}
-	},
-
-	cellClick: function(event) {
-		var $target = $(event.delegateTarget);
-		var partij = $(event.delegateTarget).data('partij'), partij2 = $(event.delegateTarget).data('partij2');
-		if (partij === this.state.row && partij2 === this.state.column) {
-			this.delegate.clearPartij();
-			this.delegate.previewCell(partij, partij2);
-		} else {
-			this.delegate.selectCell(partij, partij2);
 		}
 	},
 
@@ -358,12 +312,8 @@ client.Time.prototype = {
 		this.$desc.text(this.data.tijdenOmschrijvingen[time]);
 	},
 
-	sliderChanged: function(value) {
-		this.delegate.selectTime(this.data.tijden[value]);
-	},
-
-	sliderPreviewChanged: function(value) {
-		this.delegate.previewTime(this.data.tijden[value]);
+	sliderChanged: function(value, down) {
+		this.delegate.setTime(this.data.tijden[value], !down);
 	}
 };
 
