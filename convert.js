@@ -23,22 +23,22 @@ var tijdenPrefixes = {
 	'zomer 2012': ['2012-06', '2012-07', '2012-08']
 };
 var tijdenOmschrijvingen = {
-	'herfst 2008': 'sept, okt, nov',
-	'winter 2009': 'dec \'08, jan, feb',
-	'lente 2009': 'mar, apr, mei',
-	'zomer 2009': 'juni, juli, aug',
-	'herfst 2009': 'sept, okt, nov',
-	'winter 2010': 'dec \'09, jan, feb',
-	'lente 2010': 'mar, apr, mei',
-	'zomer 2010': 'juni, juli, aug',
-	'herfst 2010': 'sept, okt, nov',
-	'winter 2011': 'dec \'10, jan, feb',
-	'lente 2011': 'mar, apr, mei',
-	'zomer 2011': 'juni, juli, aug',
-	'herfst 2011': 'sept, okt, nov',
-	'winter 2012': 'dec \'11, jan, feb',
-	'lente 2012': 'mar, apr, mei',
-	'zomer 2012': 'juni, juli, aug'
+	'herfst 2008': "sept, okt, nov '08",
+	'winter 2009': "dec '08, jan, feb '09",
+	'lente 2009': "mar, apr, mei '09",
+	'zomer 2009': "juni, juli, aug '09",
+	'herfst 2009': "sept, okt, nov '09",
+	'winter 2010': "dec '09, jan, feb '10",
+	'lente 2010': "mar, apr, mei '10",
+	'zomer 2010': "juni, juli, aug '10",
+	'herfst 2010': "sept, okt, nov '10",
+	'winter 2011': "dec '10, jan, feb '11",
+	'lente 2011': "mar, apr, mei '11",
+	'zomer 2011': "juni, juli, aug '11",
+	'herfst 2011': "sept, okt, nov '11",
+	'winter 2012': "dec '11, jan, feb '12",
+	'lente 2012': "mar, apr, mei '12",
+	'zomer 2012': "juni, juli, aug '12"
 };
 
 var regeringen = {

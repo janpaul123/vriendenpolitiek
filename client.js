@@ -286,15 +286,15 @@ client.Time.prototype = {
 		this.$value = $('<div class="time-value"></div>');
 		this.$container.append(this.$value);
 
-		this.$desc = $('<div class="time-desc"></div>');
-		this.$container.append(this.$desc);
-
 		this.$slider = $('<div class="time-slider"></div>');
 		this.$container.append(this.$slider);
 
 		this.slider = new clayer.Slider(this.$slider, this, 20);
 		var width = 20*(this.data.tijden.length);
 		this.$slider.width(width);
+
+		this.$desc = $('<div class="time-slider-desc"></div>');
+		this.$slider.find('.clayer-slider-knob').append(this.$desc);
 
 		width += 170;
 		this.$container.width(width);

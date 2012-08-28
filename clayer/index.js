@@ -416,6 +416,7 @@ clayer.Slider.prototype = {
 	},
 
 	scrubMove: function(x, y, down) {
+		this.$knob.addClass('clayer-slider-knob-active');
 		if (down) {
 			this.updateMarker(x);
 		} else {
@@ -424,6 +425,7 @@ clayer.Slider.prototype = {
 	},
 
 	scrubLeave: function() {
+		this.$knob.removeClass('clayer-slider-knob-active');
 		this.updateKnobValue(this.markerValue);
 	},
 
