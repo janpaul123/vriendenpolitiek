@@ -6,23 +6,73 @@ module.exports = client;
 
 var clayer = require('./clayer');
 
+var findRegering = function(time, data) {
+	for (var i=0; i<data.regeringen.length; i++) {
+		var regering = data.regeringen[i];
+		if (time >= regering.start && time <= regering.eind) {
+			return regering;
+		}
+	}
+	console.error('Regering niet gevonden: ' + time);
+};
+
 client.Client = function() { return this.init.apply(this, arguments); };
 client.Client.prototype = {
 	init: function() {
 		this.$time = $('#time');
 		this.$content = $('#content');
-		this.data = require('./data');
+		this.setData(require('./data'));
+		
 		this.state = null;
 		this.pState = null;
 		this.time = new client.Time(this, $('#time'), this.data);
 		this.matrix = new client.Matrix(this, $('#matrix'), this.data);
 		this.content = new client.Content(this, $('#content'), this.data);
-		this.setState(null, {time: 'zomer 2012'});
+		this.setState(null, {time: '2012-06'});
 
 		/*for (var i=0; i<this.data.partijen.length; i++) {
 			var image = new Image();
 			image.src = '/img/' + this.data.partijen[i] + '.png';
 		}*/
+	},
+
+	setData: function(data) {
+		this.data = data;
+		this.data.partijen = ['vvd', 'pvda', 'cda', 'sp', 'd66', 'gl', 'cu', 'pvv', 'lpf', 'gpv', 'rpf'];
+
+		this.data.tijden = [];
+		for (var year = 1994; year <= 2012; year++) {
+			for (var month = 1; month <= 12; month++) {
+				var tijd = ((year + '-') + Math.floor(month/10)) + (month%10);
+				if (tijd >= this.data.regeringen[0].start && tijd <= this.data.regeringen[this.data.regeringen.length-1].eind) {
+					this.data.tijden.push(tijd);
+				}
+			}
+		}
+		for (var t=0; t<this.data.tijden.length; t++) {
+			var time = this.data.tijden[t];
+			if (!this.data.matrix[time]) {
+				this.data.matrix[time] = {};
+			}
+			for (var s=0; s<this.data.soorten.length; s++) {
+				var soort = this.data.soorten[s];
+				if (!this.data.matrix[time][soort]) {
+					this.data.matrix[time][soort] = {};
+				}
+				for (var i=0; i<this.data.partijen.length; i++) {
+					var partij = this.data.partijen[i];
+					if (!this.data.matrix[time][soort][partij]) {
+						this.data.matrix[time][soort][partij] = {};
+					}
+					for (var j=0; j<this.data.partijen.length; j++) {
+						var partij2 = this.data.partijen[j];
+						if (!this.data.matrix[time][soort][partij][partij2]) {
+							this.data.matrix[time][soort][partij][partij2] = {e: 0, o: 0, t: 0, ev: 0, et: 0, obv: 0, obt: 0};
+						}
+					}
+				}
+			}
+		}
 	},
 
 	setState: function(pState, state) {
@@ -174,14 +224,15 @@ client.Matrix.prototype = {
 
 	renderTable: function(time) {
 		if (this.time !== time) {
+			console.log(time);
 			for (var y=0; y<this.data.partijen.length; y++) {
 				var partij = this.data.partijen[y];
 				for (var x=0; x<this.data.partijen.length; x++) {
 					var partij2 = this.data.partijen[x];
-					var position = this.data.matrix[time][partij][partij2];
+					var position = this.data.matrix[time]['motie'][partij][partij2];
 					var $cell = this.$cells[partij][partij2];
-					var fraction = position.eens/position.total;
-					if (position.total > 0) {
+					var fraction = position.e/position.t;
+					if (position.t > 0) {
 						$cell.text(Math.round(fraction*100) + '%');
 						$cell.css('background-color', 'hsl(' + Math.round(fraction*120) + ', 80%, 70%)');
 					} else {
@@ -218,10 +269,10 @@ client.Matrix.prototype = {
 					var position, $cell, fraction;
 
 					if ((this.pState.row || partij ) === partij && (this.pState.column || partij2) === partij2) {
-						position = this.data.matrix[state.time][partij][partij2];
+						position = this.data.matrix[state.time]['motie'][partij][partij2];
 						$cell = this.$cells[partij][partij2];
-						fraction = position.eens/position.total;
-						if (position.total > 0) {
+						fraction = position.e/position.t;
+						if (position.t > 0) {
 							$cell.css('background-color', 'hsl(' + Math.round(fraction*120) + ', 80%, 70%)');
 						} else {
 							$cell.css('background-color', 'hsl(0, 0%, 70%)');
@@ -230,10 +281,10 @@ client.Matrix.prototype = {
 
 					if (state.row !== undefined || state.column !== undefined) {
 						if ((state.row || partij ) === partij && (state.column || partij2) === partij2) {
-							position = this.data.matrix[state.time][partij][partij2];
+							position = this.data.matrix[state.time]['motie'][partij][partij2];
 							$cell = this.$cells[partij][partij2];
-							fraction = position.eens/position.total;
-							if (position.total > 0) {
+							fraction = position.e/position.t;
+							if (position.t > 0) {
 								$cell.css('background-color', 'hsl(' + Math.round(fraction*120) + ', 80%, 50%)');
 							} else {
 								$cell.css('background-color', 'hsl(0, 0%, 50%)');
@@ -289,8 +340,8 @@ client.Time.prototype = {
 		this.$slider = $('<div class="time-slider"></div>');
 		this.$container.append(this.$slider);
 
-		this.slider = new clayer.Slider(this.$slider, this, 20);
-		var width = 20*(this.data.tijden.length);
+		this.slider = new clayer.Slider(this.$slider, this, 2);
+		var width = 2*(this.data.tijden.length);
 		this.$slider.width(width);
 
 		this.$desc = $('<div class="time-slider-desc"></div>');
@@ -309,7 +360,7 @@ client.Time.prototype = {
 			this.slider.setKnobValue(this.data.tijden.indexOf(time));
 		}
 		this.$value.text(time);
-		this.$desc.text(this.data.tijdenOmschrijvingen[time]);
+		this.$desc.text(findRegering(time, this.data).naam);
 	},
 
 	sliderChanged: function(value, down) {
@@ -353,10 +404,10 @@ client.Content.prototype = {
 
 		var $description = this.$cross.find('.content-cross-comparison-description');
 		var $value = this.$cross.find('.content-cross-comparison-value');
-		var position = this.data.matrix[state.time][state.row][state.column];
-		var fraction = position.eens/position.total, percentage = Math.round(fraction*100);
+		var position = this.data.matrix[state.time]['motie'][state.row][state.column];
+		var fraction = position.e/position.t, percentage = Math.round(fraction*100);
 
-		if (position.total > 0) {
+		if (position.t > 0) {
 			$value.text(percentage + '% eens');
 			if (state.row === state.column) {
 				$description.text('narcisme');
@@ -390,9 +441,9 @@ client.Content.prototype = {
 
 		for (var i=0; i<this.data.partijen.length; i++) {
 			var partij2 = this.data.partijen[i];
-			var position = this.data.matrix[state.time][partij][partij2];
-			if (partij !== partij2 && position.total > 0) {
-				var fraction = position.eens/position.total;
+			var position = this.data.matrix[state.time]['motie'][partij][partij2];
+			if (partij !== partij2 && position.t > 0) {
+				var fraction = position.e/position.t;
 				if (fraction > vriendFraction) {
 					vriendFraction = fraction;
 					vriend = partij2;
@@ -434,9 +485,9 @@ client.Partij.prototype = {
 		if (this.partij !== partij || this.time !== time) {
 			this.$partij.find('.content-partij-logo').html('<img class="partij-logo" src="/img/' + partij +'.png"/>');
 			this.$partij.find('.content-partij-name').text(this.data.namen[partij]);
-			this.$partij.find('.content-partij-regering').text(this.data.regeringen[time][partij]);
-			if (this.data.totaalPerPartij[time][partij] > 0) {
-				this.$partij.find('.content-partij-voor').text(Math.round(this.data.voors[time][partij]/this.data.totaalPerPartij[time][partij]*100) + '% voor (' + this.data.voors[time][partij] + '/' + this.data.totaalPerPartij[time][partij] + ')');
+			this.$partij.find('.content-partij-regering').text(this.getRegeringText(partij, time));
+			if (this.data.matrix[time]['motie'][partij][partij].e > 0) {
+				this.$partij.find('.content-partij-voor').text(Math.round(this.data.matrix[time]['motie'][partij][partij].ev/this.data.matrix[time]['motie'][partij][partij].e*100) + '% voor (' + this.data.matrix[time]['motie'][partij][partij].ev + '/' + this.data.matrix[time]['motie'][partij][partij].e + ')');
 			} else {
 				this.$partij.find('.content-partij-voor').text('');
 			}
@@ -444,5 +495,12 @@ client.Partij.prototype = {
 			this.partij = partij;
 			this.time = time;
 		}
+	},
+
+	getRegeringText: function(partij, time) {
+		var regering = findRegering(time, this.data);
+		if (regering.regering.indexOf(partij) >= 0) return 'regering';
+		else if (regering.gedoogsteun.indexOf(partij) >= 0) return 'gedoogpartij';
+		else return 'oppositie';
 	}
 };
