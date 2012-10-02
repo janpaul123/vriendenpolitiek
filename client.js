@@ -41,11 +41,15 @@ client.Client.prototype = {
 		this.data.partijen = ['vvd', 'pvda', 'cda', 'sp', 'd66', 'gl', 'cu', 'pvv', 'lpf', 'gpv', 'rpf'];
 
 		this.data.tijden = [];
+		this.data.tijdenNamen = {};
+		var maanden = ['', 'jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
 		for (var year = 1994; year <= 2012; year++) {
 			for (var month = 1; month <= 12; month++) {
 				var tijd = ((year + '-') + Math.floor(month/10)) + (month%10);
 				if (tijd >= this.data.regeringen[0].start && tijd <= this.data.regeringen[this.data.regeringen.length-1].eind) {
 					this.data.tijden.push(tijd);
+					this.data.tijdenNamen[tijd] = maanden[month] + ' ' + year;
 				}
 			}
 		}
@@ -358,7 +362,7 @@ client.Time.prototype = {
 		} else {
 			this.slider.setKnobValue(this.data.tijden.indexOf(time));
 		}
-		this.$value.text(time);
+		this.$value.text(this.data.tijdenNamen[time]);
 		this.$desc.text(findRegering(time, this.data).naam);
 	},
 
