@@ -4,9 +4,6 @@
 var options = {
 	port: process.env.PORT || 3000,
 	assets: __dirname + '/assets',
-	staticOptions: {
-		maxAge: 10*60*1000
-	},
 	browserify: {
 		entry: __dirname + '/index.js',
 		debug: true,
@@ -34,8 +31,18 @@ var browserify = require('browserify');
 var app = connect();
 if (options.logs.requests) app.use(connect.logger('tiny'));
 
-app.use(lessMiddleware(options.less))
+var noCache = function(req, res, next) {
+	res.on('header', function(header) {
+		res.setHeader('Cache-Control', 'private, max-age=0');
+		res.setHeader('Expires', 'Thu, 01 Jan 1970 00:00:00 GMT');
+		res.setHeader('Pragma', 'no-cache');
+	});
+	next();
+};
+
+app.use(noCache)
+	.use(lessMiddleware(options.less))
 	.use(connect.favicon(__dirname + '/assets/favicon.ico'))
-	.use(connect['static'](options.assets, options.staticOptions))
+	.use(connect['static'](options.assets))
 	.use(browserify(options.browserify))
 	.listen(options.port);

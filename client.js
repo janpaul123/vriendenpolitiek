@@ -30,10 +30,10 @@ client.Client.prototype = {
 		this.content = new client.Content(this, $('#content'), this.data);
 		this.setState(null, {time: '2012-06'});
 
-		/*for (var i=0; i<this.data.partijen.length; i++) {
+		for (var i=0; i<this.data.partijen.length; i++) {
 			var image = new Image();
 			image.src = '/img/' + this.data.partijen[i] + '.png';
-		}*/
+		}
 	},
 
 	setData: function(data) {
@@ -224,7 +224,6 @@ client.Matrix.prototype = {
 
 	renderTable: function(time) {
 		if (this.time !== time) {
-			console.log(time);
 			for (var y=0; y<this.data.partijen.length; y++) {
 				var partij = this.data.partijen[y];
 				for (var x=0; x<this.data.partijen.length; x++) {
