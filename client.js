@@ -37,8 +37,9 @@ client.Client.prototype = {
 		this.pState = null;
 		this.time = new client.Time(this, $('#time'), this.data);
 		this.matrix = new client.Matrix(this, $('#matrix'), this.data);
+		this.soorten = new client.Soorten(this, $('#matrix'), this.data);
 		this.content = new client.Content(this, $('#content'), this.data);
-		this.setState(null, {time: '2012-06', regeringen: false});
+		this.setState(null, {time: '2012-06', regeringen: false, soorten: 'motie'});
 
 		for (var i=0; i<this.data.partijen.length; i++) {
 			var image = new Image();
@@ -66,6 +67,7 @@ client.Client.prototype = {
 
 		this.fillTimes();
 		this.regeringTimes();
+		this.fillSoorten();
 	},
 
 	fillTimes: function() {
@@ -131,6 +133,39 @@ client.Client.prototype = {
 		}
 	},
 
+	fillSoorten: function() {
+		var combinedSoorten = ['', 'motie-amendement', 'motie-wetsvoorstel', 'motie-wetsvoorstel-anders', 'motie-anders', 'motie-amendement-wetsvoorstel', 'motie-amendement-anders', 'motie-amendement-wetsvoorstel-anders', 'amendement-wetsvoorstel', 'amendement-wetsvoorstel-anders', 'amendement-wetsvoorstel-anders', 'wetsvoorstel-anders'];
+		for (var time in this.data.matrix) {
+			for (var c=0; c<combinedSoorten.length; c++) {
+				var combinedSoort = combinedSoorten[c];
+				this.data.matrix[time][combinedSoort] = {};
+
+				for (var i=0; i<this.data.partijen.length; i++) {
+					var partij = this.data.partijen[i];
+					this.data.matrix[time][combinedSoort][partij] = {};
+
+					for (var j=0; j<this.data.partijen.length; j++) {
+						var partij2 = this.data.partijen[j];
+						this.data.matrix[time][combinedSoort][partij][partij2] = {e: 0, o: 0, t: 0, ev: 0, et: 0, obv: 0, obt: 0};
+
+						for (var s=0; s<this.data.soorten.length; s++) {
+							var soort = this.data.soorten[s];
+							if (combinedSoort.indexOf(soort) >= 0) {
+								this.data.matrix[time][combinedSoort][partij][partij2].e += this.data.matrix[time][soort][partij][partij2].e;
+								this.data.matrix[time][combinedSoort][partij][partij2].o += this.data.matrix[time][soort][partij][partij2].o;
+								this.data.matrix[time][combinedSoort][partij][partij2].t += this.data.matrix[time][soort][partij][partij2].t;
+								this.data.matrix[time][combinedSoort][partij][partij2].ev += this.data.matrix[time][soort][partij][partij2].ev;
+								this.data.matrix[time][combinedSoort][partij][partij2].et += this.data.matrix[time][soort][partij][partij2].et;
+								this.data.matrix[time][combinedSoort][partij][partij2].obv += this.data.matrix[time][soort][partij][partij2].obv;
+								this.data.matrix[time][combinedSoort][partij][partij2].obt += this.data.matrix[time][soort][partij][partij2].obt;
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+
 	setState: function(pState, state) {
 		this.pState = pState;
 		this.state = state || this.state;
@@ -145,20 +180,26 @@ client.Client.prototype = {
 		this.time.setState(this.state, this.pState);
 		this.matrix.setState(this.state, this.pState);
 		this.content.setState(this.state, this.pState);
+		this.soorten.setState(this.state, this.pState);
 	},
 
 	setColumn: function(partij, preview) {
-		var state = {time: this.state.time, regeringen: this.state.regeringen, column: partij};
+		var state = {time: this.state.time, regeringen: this.state.regeringen, soorten: this.state.soorten, column: partij};
 		this.setState(state, preview ? null : state);
 	},
 
 	setRow: function(partij, preview) {
-		var state = {time: this.state.time, regeringen: this.state.regeringen, row: partij};
+		var state = {time: this.state.time, regeringen: this.state.regeringen, soorten: this.state.soorten, row: partij};
 		this.setState(state, preview ? null : state);
 	},
 
 	setCell: function(partij, partij2, preview) {
-		var state = {time: this.state.time, regeringen: this.state.regeringen, row: partij, column: partij2};
+		var state = {time: this.state.time, regeringen: this.state.regeringen, soorten: this.state.soorten, row: partij, column: partij2};
+		this.setState(state, preview ? null : state);
+	},
+
+	setSoorten: function(soorten, preview) {
+		var state = {time: this.state.time, regeringen: this.state.regeringen, soorten: soorten, row: this.state.row, column: this.state.column};
 		this.setState(state, preview ? null : state);
 	},
 
@@ -168,7 +209,7 @@ client.Client.prototype = {
 	},
 
 	setTime: function(time, regeringen, preview) {
-		var state = {time: time, regeringen: regeringen, row: this.state.row, column: this.state.column};
+		var state = {time: time, regeringen: regeringen, soorten: this.state.soorten, row: this.state.row, column: this.state.column};
 		this.setState(state, preview ? null : state);
 	}
 };
@@ -240,7 +281,7 @@ client.Matrix.prototype = {
 	},
 
 	setState: function(state, pState) {
-		this.renderTable((pState || state).time);
+		this.renderTable((pState || state).time, (pState || state).soorten);
 		this.showPreview(pState || state);
 		this.showState(state);
 	},
@@ -278,13 +319,13 @@ client.Matrix.prototype = {
 		}
 	},
 
-	renderTable: function(time) {
-		if (this.time !== time) {
+	renderTable: function(time, soorten) {
+		if (this.time !== time || this.soorten !== soorten) {
 			for (var y=0; y<this.data.partijen.length; y++) {
 				var partij = this.data.partijen[y];
 				for (var x=0; x<this.data.partijen.length; x++) {
 					var partij2 = this.data.partijen[x];
-					var position = this.data.matrix[time]['motie'][partij][partij2];
+					var position = this.data.matrix[time][soorten][partij][partij2];
 					var $cell = this.$cells[partij][partij2];
 					var fraction = position.e/position.t;
 					if (position.t > 0) {
@@ -297,6 +338,7 @@ client.Matrix.prototype = {
 				}
 			}
 			this.time = time;
+			this.soorten = soorten;
 		}
 	},
 
@@ -324,7 +366,7 @@ client.Matrix.prototype = {
 					var position, $cell, fraction;
 
 					if ((this.pState.row || partij ) === partij && (this.pState.column || partij2) === partij2) {
-						position = this.data.matrix[state.time]['motie'][partij][partij2];
+						position = this.data.matrix[state.time][state.soorten][partij][partij2];
 						$cell = this.$cells[partij][partij2];
 						fraction = position.e/position.t;
 						if (position.t > 0) {
@@ -336,7 +378,7 @@ client.Matrix.prototype = {
 
 					if (state.row !== undefined || state.column !== undefined) {
 						if ((state.row || partij ) === partij && (state.column || partij2) === partij2) {
-							position = this.data.matrix[state.time]['motie'][partij][partij2];
+							position = this.data.matrix[state.time][state.soorten][partij][partij2];
 							$cell = this.$cells[partij][partij2];
 							fraction = position.e/position.t;
 							if (position.t > 0) {
@@ -517,7 +559,7 @@ client.Content.prototype = {
 
 		var $description = this.$cross.find('.content-cross-comparison-description');
 		var $value = this.$cross.find('.content-cross-comparison-value');
-		var position = this.data.matrix[state.time]['motie'][state.row][state.column];
+		var position = this.data.matrix[state.time][state.soorten][state.row][state.column];
 		var fraction = position.e/position.t, percentage = Math.round(fraction*100);
 
 		if (position.t > 0) {
@@ -542,8 +584,8 @@ client.Content.prototype = {
 			$description.text('');
 		}
 
-		this.partijCrossLeft.setPartijTime(state.row, state.time);
-		this.partijCrossRight.setPartijTime(state.column, state.time);
+		this.partijCrossLeft.setPartijTimeSoorten(state.row, state.time, state.soorten);
+		this.partijCrossRight.setPartijTimeSoorten(state.column, state.time, state.soorten);
 	},
 
 	showSingle: function(state) {
@@ -554,7 +596,7 @@ client.Content.prototype = {
 
 		for (var i=0; i<this.data.partijen.length; i++) {
 			var partij2 = this.data.partijen[i];
-			var position = this.data.matrix[state.time]['motie'][partij][partij2];
+			var position = this.data.matrix[state.time][state.soorten][partij][partij2];
 			if (partij !== partij2 && position.t > 0) {
 				var fraction = position.e/position.t;
 				if (fraction > vriendFraction) {
@@ -575,8 +617,8 @@ client.Content.prototype = {
 		if (vriend !== null && vijand !== null) {
 			this.$single.find('.content-single-left-container').show();
 			this.$single.find('.content-single-right-container').show();
-			this.partijSingleLeft.setPartijTime(vriend, state.time);
-			this.partijSingleRight.setPartijTime(vijand, state.time);
+			this.partijSingleLeft.setPartijTimeSoorten(vriend, state.time, state.soorten);
+			this.partijSingleRight.setPartijTimeSoorten(vijand, state.time, state.soorten);
 		} else {
 			this.$single.find('.content-single-left-container').hide();
 			this.$single.find('.content-single-right-container').hide();
@@ -594,19 +636,20 @@ client.Partij.prototype = {
 		this.$container.append(this.$partij);
 	},
 
-	setPartijTime: function(partij, time) {
-		if (this.partij !== partij || this.time !== time) {
+	setPartijTimeSoorten: function(partij, time, soorten) {
+		if (this.partij !== partij || this.time !== time || this.soorten !== soorten) {
 			this.$partij.find('.content-partij-logo').html('<img class="partij-logo" src="/img/' + partij +'.png"/>');
 			this.$partij.find('.content-partij-name').text(this.data.namen[partij]);
 			this.$partij.find('.content-partij-regering').text(this.getRegeringText(partij, time));
-			if (this.data.matrix[time]['motie'][partij][partij].e > 0) {
-				this.$partij.find('.content-partij-voor').text(Math.round(this.data.matrix[time]['motie'][partij][partij].ev/this.data.matrix[time]['motie'][partij][partij].e*100) + '% voor (' + this.data.matrix[time]['motie'][partij][partij].ev + '/' + this.data.matrix[time]['motie'][partij][partij].e + ')');
+			if (this.data.matrix[time][soorten][partij][partij].e > 0) {
+				this.$partij.find('.content-partij-voor').text(Math.round(this.data.matrix[time][soorten][partij][partij].ev/this.data.matrix[time][soorten][partij][partij].e*100) + '% voor (' + this.data.matrix[time][soorten][partij][partij].ev + '/' + this.data.matrix[time][soorten][partij][partij].e + ')');
 			} else {
 				this.$partij.find('.content-partij-voor').text('');
 			}
 			this.$partij.find('.content-partij-totaal').text('');
 			this.partij = partij;
 			this.time = time;
+			this.soorten = soorten;
 		}
 	},
 
@@ -615,5 +658,51 @@ client.Partij.prototype = {
 		if (regering.regering.indexOf(partij) >= 0) return 'regering';
 		else if (regering.gedoogsteun.indexOf(partij) >= 0) return 'gedoogpartij';
 		else return 'oppositie';
+	}
+};
+
+client.Soorten = function() { return this.init.apply(this, arguments); };
+client.Soorten.prototype = {
+	init: function(delegate, $matrix, data) {
+		this.delegate = delegate;
+		this.$matrix = $matrix;
+		this.data = data;
+		this.$container = $('<div class="soorten-container"></div>');
+		this.$matrix.append(this.$container);
+
+		this.$soorten = {};
+		var namen = ['moties', 'amendementen', 'wetsvoorstellen', 'anders'];
+		for (var s=0; s<this.data.soorten.length; s++) {
+			var $soort = $('<div class="soorten-soort">' + namen[s] + '</div>');
+			this.$container.append($soort);
+			$soort.data('name', this.data.soorten[s]);
+			$soort.on('click', this.selectSoort.bind(this));
+			this.$soorten[this.data.soorten[s]] = $soort;
+		}
+	},
+
+	setState: function(state, pState) {
+		this.state = pState || state;
+
+		this.$container.children('.soorten-soort-active').removeClass('soorten-soort-active');
+		var soorten = this.state.soorten.split('-');
+		if (soorten[0] !== '') {
+			for (var i=0; i<soorten.length; i++) {
+				this.$soorten[soorten[i]].addClass('soorten-soort-active');
+			}
+		}
+	},
+
+	selectSoort: function(event) {
+		var $delegate = $(event.delegateTarget);
+		this.$soorten[$delegate.data('name')].toggleClass('soorten-soort-active');
+		var soorten = [];
+		for (var s=0; s<this.data.soorten.length; s++) {
+			var soort = this.data.soorten[s];
+			if (this.$soorten[soort].hasClass('soorten-soort-active')) {
+				soorten.push(soort);
+			}
+		}
+		this.delegate.setSoorten(soorten.join('-'), false);
 	}
 };
