@@ -56,10 +56,12 @@ body {
 		top: 0px;
 		height: 50px;
 		border: 4px solid hsla(195, 100%, 60%, 0.7);
+		width: 700px;
+		margin-left: -350px;
 
 		.time-slider {
 			position: absolute;
-			left: 5px;
+			left: 110px;
 			top: 14px;
 			padding: 10px 5px;
 
@@ -84,6 +86,44 @@ body {
 			top: 14px;
 			font-size: 24px;
 			line-height: 24px;
+		}
+
+		.time-container-maanden, .time-container-regeringen {
+			position: absolute;
+			display: none;
+			left: 0px;
+			top: 0px;
+			height: 50px;
+			width: 700px;
+		}
+
+		&.time-container-show-maanden .time-container-maanden {
+			display: block;
+		}
+
+		&.time-container-show-regeringen .time-container-regeringen {
+			display: block;
+		}
+
+		.time-select-maanden, .time-select-regeringen {
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			line-height: 25px;
+			padding: 0 5px;
+			width: 80px;
+			text-align: center;
+			cursor: pointer;
+			background-color: hsla(195, 100%, 60%, 0.4);
+
+			&.time-select-active, &:hover {
+				font-weight: bold;
+				background-color: hsla(195, 100%, 60%, 0.7);
+			}
+		}
+
+		.time-select-regeringen {
+			top: 25px;
 		}
 	}
 }

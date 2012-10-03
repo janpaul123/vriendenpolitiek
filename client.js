@@ -10,10 +10,20 @@ var findRegering = function(time, data) {
 	for (var i=0; i<data.regeringen.length; i++) {
 		var regering = data.regeringen[i];
 		if (time >= regering.start && time <= regering.eind) {
-			return regering;
+			return i;
 		}
 	}
-	console.error('Regering niet gevonden: ' + time);
+	return findRegeringByName(time, data);
+};
+
+var findRegeringByName = function(name, data) {
+	for (var i=0; i<data.regeringen.length; i++) {
+		var regering = data.regeringen[i];
+		if (name === regering.naam) {
+			return i;
+		}
+	}
+	console.error('Regering niet gevonden: ' + name);
 };
 
 client.Client = function() { return this.init.apply(this, arguments); };
@@ -28,7 +38,7 @@ client.Client.prototype = {
 		this.time = new client.Time(this, $('#time'), this.data);
 		this.matrix = new client.Matrix(this, $('#matrix'), this.data);
 		this.content = new client.Content(this, $('#content'), this.data);
-		this.setState(null, {time: '2012-06'});
+		this.setState(null, {time: '2012-06', regeringen: false});
 
 		for (var i=0; i<this.data.partijen.length; i++) {
 			var image = new Image();
@@ -53,6 +63,12 @@ client.Client.prototype = {
 				}
 			}
 		}
+
+		this.fillTimes();
+		this.regeringTimes();
+	},
+
+	fillTimes: function() {
 		for (var t=0; t<this.data.tijden.length; t++) {
 			var time = this.data.tijden[t];
 			if (!this.data.matrix[time]) {
@@ -79,6 +95,42 @@ client.Client.prototype = {
 		}
 	},
 
+	regeringTimes: function() {
+		for (var r=0; r<this.data.regeringen.length; r++) {
+			var regering = this.data.regeringen[r];
+			this.data.matrix[regering.naam] = {};
+
+			for (var s=0; s<this.data.soorten.length; s++) {
+				var soort = this.data.soorten[s];
+				this.data.matrix[regering.naam][soort] = {};
+
+				for (var i=0; i<this.data.partijen.length; i++) {
+					var partij = this.data.partijen[i];
+					this.data.matrix[regering.naam][soort][partij] = {};
+
+					for (var j=0; j<this.data.partijen.length; j++) {
+						var partij2 = this.data.partijen[j];
+						this.data.matrix[regering.naam][soort][partij][partij2] = {e: 0, o: 0, t: 0, ev: 0, et: 0, obv: 0, obt: 0};
+
+						for (var t=0; t<this.data.tijden.length; t++) {
+							var time = this.data.tijden[t];
+
+							if (time >= regering.start && time <= regering.eind) {
+								this.data.matrix[regering.naam][soort][partij][partij2].e += this.data.matrix[time][soort][partij][partij2].e;
+								this.data.matrix[regering.naam][soort][partij][partij2].o += this.data.matrix[time][soort][partij][partij2].o;
+								this.data.matrix[regering.naam][soort][partij][partij2].t += this.data.matrix[time][soort][partij][partij2].t;
+								this.data.matrix[regering.naam][soort][partij][partij2].ev += this.data.matrix[time][soort][partij][partij2].ev;
+								this.data.matrix[regering.naam][soort][partij][partij2].et += this.data.matrix[time][soort][partij][partij2].et;
+								this.data.matrix[regering.naam][soort][partij][partij2].obv += this.data.matrix[time][soort][partij][partij2].obv;
+								this.data.matrix[regering.naam][soort][partij][partij2].obt += this.data.matrix[time][soort][partij][partij2].obt;
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+
 	setState: function(pState, state) {
 		this.pState = pState;
 		this.state = state || this.state;
@@ -96,17 +148,17 @@ client.Client.prototype = {
 	},
 
 	setColumn: function(partij, preview) {
-		var state = {time: this.state.time, column: partij};
+		var state = {time: this.state.time, regeringen: this.state.regeringen, column: partij};
 		this.setState(state, preview ? null : state);
 	},
 
 	setRow: function(partij, preview) {
-		var state = {time: this.state.time, row: partij};
+		var state = {time: this.state.time, regeringen: this.state.regeringen, row: partij};
 		this.setState(state, preview ? null : state);
 	},
 
 	setCell: function(partij, partij2, preview) {
-		var state = {time: this.state.time, row: partij, column: partij2};
+		var state = {time: this.state.time, regeringen: this.state.regeringen, row: partij, column: partij2};
 		this.setState(state, preview ? null : state);
 	},
 
@@ -115,8 +167,8 @@ client.Client.prototype = {
 		this.setState(state, state);
 	},
 
-	setTime: function(time, preview) {
-		var state = {time: time, row: this.state.row, column: this.state.column};
+	setTime: function(time, regeringen, preview) {
+		var state = {time: time, regeringen: regeringen, row: this.state.row, column: this.state.column};
 		this.setState(state, preview ? null : state);
 	}
 };
@@ -337,37 +389,95 @@ client.Time.prototype = {
 		this.$container = $('<div class="time-container"></div>');
 		this.$time.append(this.$container);
 
-		this.$value = $('<div class="time-value"></div>');
-		this.$container.append(this.$value);
+		this.$containerMaanden = $('<div class="time-container-maanden"></div>');
+		this.$container.append(this.$containerMaanden);
 
-		this.$slider = $('<div class="time-slider"></div>');
-		this.$container.append(this.$slider);
+		this.$valueMaanden = $('<div class="time-value"></div>');
+		this.$containerMaanden.append(this.$valueMaanden);
 
-		this.slider = new clayer.Slider(this.$slider, this, 2);
+		this.$sliderMaanden = $('<div class="time-slider"></div>');
+		this.$containerMaanden.append(this.$sliderMaanden);
+
+		this.sliderMaanden = new clayer.Slider(this.$sliderMaanden, {sliderChanged: this.sliderMaandenChanged.bind(this)}, 2);
 		var width = 2*(this.data.tijden.length);
-		this.$slider.width(width);
+		this.$sliderMaanden.width(width);
 
-		this.$desc = $('<div class="time-slider-desc"></div>');
-		this.$slider.find('.clayer-slider-knob').append(this.$desc);
+		this.$descMaanden = $('<div class="time-slider-desc"></div>');
+		this.$sliderMaanden.find('.clayer-slider-knob').append(this.$descMaanden);
 
-		width += 170;
-		this.$container.width(width);
-		this.$container.css('margin-left', -width/2);
+		this.$containerRegeringen = $('<div class="time-container-regeringen"></div>');
+		this.$container.append(this.$containerRegeringen);
+
+		this.$valueRegeringen = $('<div class="time-value"></div>');
+		this.$containerRegeringen.append(this.$valueRegeringen);
+
+		this.$sliderRegeringen = $('<div class="time-slider"></div>');
+		this.$containerRegeringen.append(this.$sliderRegeringen);
+
+		this.sliderRegeringen = new clayer.Slider(this.$sliderRegeringen, {sliderChanged: this.sliderRegeringenChanged.bind(this)}, 50);
+		width = 50*(this.data.regeringen.length);
+		this.$sliderRegeringen.width(width);
+
+		this.$descRegeringen = $('<div class="time-slider-desc"></div>');
+		this.$sliderRegeringen.find('.clayer-slider-knob').append(this.$descRegeringen);
+
+		this.$selectMaanden = $('<div class="time-select-maanden">maanden</div>');
+		this.$selectMaanden.on('click', this.selectMaanden.bind(this));
+		this.$container.append(this.$selectMaanden);
+		this.$selectRegeringen = $('<div class="time-select-regeringen">regeringen</div>');
+		this.$selectRegeringen.on('click', this.selectRegeringen.bind(this));
+		this.$container.append(this.$selectRegeringen);
 	},
 
 	setState: function(state, pState) {
-		var time = (pState || state).time;
-		if (state.time === time) {
-			this.slider.setValue(this.data.tijden.indexOf(time));
+		this.state = pState || state;
+		var time = this.state.time;
+		if (!this.state.regeringen) {
+			if (state.time === time) {
+				this.sliderMaanden.setValue(this.data.tijden.indexOf(time));
+			} else {
+				this.sliderMaanden.setKnobValue(this.data.tijden.indexOf(time));
+			}
+			this.$valueMaanden.text(this.data.tijdenNamen[time]);
+			this.$descMaanden.text(this.data.regeringen[findRegering(time, this.data)].naam);
+			this.$container.removeClass('time-container-show-regeringen');
+			this.$container.addClass('time-container-show-maanden');
+			this.$selectRegeringen.removeClass('time-select-active');
+			this.$selectMaanden.addClass('time-select-active');
 		} else {
-			this.slider.setKnobValue(this.data.tijden.indexOf(time));
+			var regeringIndex = findRegeringByName(time, this.data);
+			if (state.time === time) {
+				this.sliderRegeringen.setValue(regeringIndex);
+			} else {
+				this.sliderRegeringen.setKnobValue(regeringIndex);
+			}
+			this.$valueRegeringen.text(this.data.regeringen[regeringIndex].naam);
+			this.$descRegeringen.text(this.data.tijdenNamen[this.data.regeringen[regeringIndex].start] + ' t/m ' + this.data.tijdenNamen[this.data.regeringen[regeringIndex].eind]);
+			this.$container.removeClass('time-container-show-maanden');
+			this.$container.addClass('time-container-show-regeringen');
+			this.$selectMaanden.removeClass('time-select-active');
+			this.$selectRegeringen.addClass('time-select-active');
 		}
-		this.$value.text(this.data.tijdenNamen[time]);
-		this.$desc.text(findRegering(time, this.data).naam);
 	},
 
-	sliderChanged: function(value, down) {
-		this.delegate.setTime(this.data.tijden[value], !down);
+	selectMaanden: function() {
+		if (this.state.regeringen) {
+			this.delegate.setTime(this.data.regeringen[findRegeringByName(this.state.time, this.data)].start, false, false);
+		}
+	},
+
+	selectRegeringen: function() {
+		if (!this.state.regeringen) {
+			this.delegate.setTime(this.data.regeringen[findRegering(this.state.time, this.data)].naam, true, false);
+		}
+	},
+
+	sliderMaandenChanged: function(value, down) {
+		this.delegate.setTime(this.data.tijden[value], false, !down);
+	},
+
+	sliderRegeringenChanged: function(value, down) {
+		this.delegate.setTime(this.data.regeringen[value].naam, true, !down);
 	}
 };
 
@@ -501,7 +611,7 @@ client.Partij.prototype = {
 	},
 
 	getRegeringText: function(partij, time) {
-		var regering = findRegering(time, this.data);
+		var regering = this.data.regeringen[findRegering(time, this.data)];
 		if (regering.regering.indexOf(partij) >= 0) return 'regering';
 		else if (regering.gedoogsteun.indexOf(partij) >= 0) return 'gedoogpartij';
 		else return 'oppositie';
