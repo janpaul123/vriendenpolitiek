@@ -32,7 +32,7 @@ client.Client.prototype = {
 		this.$time = $('#time');
 		this.$content = $('#content');
 		this.setData(require('./data'));
-		
+
 		this.state = null;
 		this.pState = null;
 		this.time = new client.Time(this, $('#time'), this.data);
@@ -43,7 +43,7 @@ client.Client.prototype = {
 
 		for (var i=0; i<this.data.partijen.length; i++) {
 			var image = new Image();
-			image.src = '/img/' + this.data.partijen[i] + '.png';
+			image.src = 'img/' + this.data.partijen[i] + '.png';
 		}
 	},
 
@@ -287,7 +287,7 @@ client.Matrix.prototype = {
 	},
 
 	mouseLeave: function() {
-		
+
 	},
 
 	scrubMove: function(x, y, down) {
@@ -611,7 +611,7 @@ client.Content.prototype = {
 		}
 
 		this.$single.find('.content-single-partij').text(this.data.namen[partij]);
-		this.$single.find('.content-single-partij-logo').html('<img class="partij-logo" src="/img/' + partij +'.png"/>');
+		this.$single.find('.content-single-partij-logo').html('<img class="partij-logo" src="img/' + partij +'.png"/>');
 		this.$single.find('.content-single-title-left').text('Beste vriend (' + Math.round(vriendFraction*100) + '%)');
 		this.$single.find('.content-single-title-right').text('Grootste vijand (' + Math.round(vijandFraction*100) + '%)');
 		if (vriend !== null && vijand !== null) {
@@ -638,7 +638,7 @@ client.Partij.prototype = {
 
 	setPartijTimeSoorten: function(partij, time, soorten) {
 		if (this.partij !== partij || this.time !== time || this.soorten !== soorten) {
-			this.$partij.find('.content-partij-logo').html('<img class="partij-logo" src="/img/' + partij +'.png"/>');
+			this.$partij.find('.content-partij-logo').html('<img class="partij-logo" src="img/' + partij +'.png"/>');
 			this.$partij.find('.content-partij-name').text(this.data.namen[partij]);
 			this.$partij.find('.content-partij-regering').text(this.getRegeringText(partij, time));
 			if (this.data.matrix[time][soorten][partij][partij].e > 0) {
